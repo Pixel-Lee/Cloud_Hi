@@ -30,7 +30,7 @@ void* Deal()
     {
 	increment(p);
     }
-    return (void*)i;
+    return (void*)(long)i;
 }
 
 int main()
@@ -46,21 +46,18 @@ int main()
     ret_thrd2 = pthread_create(&thread2, NULL, Deal, NULL);
 
     //judge if thread is successfully created
-    if(ret_thrd1!=0)
-    {
-	printf("线程1创建失败\n");
+    if(ret_thrd1!=0){
+	   printf("线程1创建失败\n");
     }
-    else
-    {
-	printf("线程1创建成功\n");
+    else{
+	   printf("线程1创建成功\n");
     }
-    if(ret_thrd2!=0)
-    {
-	printf("线程2创建失败\n");
+    
+    if(ret_thrd2!=0){
+	   printf("线程2创建失败\n");
     }
-    else
-    {
-	printf("线程2创建成功\n");
+    else{
+	   printf("线程2创建成功\n");
     }
 
     pJoin_thrd1=pthread_join(thread1, (void**)&retval1);
