@@ -1,79 +1,93 @@
-//in my branch
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <time.h>
+#include <unistd.h>
+#include <stdbool.h>
 
 typedef struct Counter_t
 {
     int value;
+    FILE* fp;
     pthread_mutex_t lock;
 }Counter_t;
 Counter_t gloCoun,*p;
 
-void init(Counter_t *c)
+void init(Counter_t *c,char* filename)
 {
     c->value=0;
+    c->fp = fopen(filename, "r");
     pthread_mutex_init(&c->lock,NULL);
 }
 
-void increment(Counter_t *c)
+bool readPuzzle(Counter_t *c,char *puzzle,int size)
 {
+    bool retBool;
     pthread_mutex_lock(&c->lock);
-    c->value++;
+    if(fgets(puzzle,size,c->fp)!=NULL)
+    {
+	c->value++;
+	retBool=true;
+    }
+    else
+    {
+	retBool=false;
+    }
     pthread_mutex_unlock(&c->lock);
+    return retBool;
 }
 
 void* Deal()
 {
     int i=0;
-    for(i;i<20000;i++)
+    char puzzle[128];
+    while(readPuzzle(p,puzzle,sizeof puzzle))
     {
-	increment(p);
+	printf("%s\n",puzzle);
     }
+    
+    usleep(rand()%100);
     return (void*)i;
 }
 
 int main()
 {
-    pthread_t thread1, thread2;
-    int ret_thrd1, ret_thrd2;//pthread_create's value
-    int pJoin_thrd1,pJoin_thrd2;//pthread_join's value
-    int retval1,retval2;
+    printf("input thread num: \n");
+    int n;
+    scanf("%d",&n);
+    pthread_t thread[n];
+    int retval[n],beginTime,endTime;
     
+    char filename[30];
+    printf("input test file:");
+    scanf("%s",&filename);
+
+    beginTime=clock();
     p=&gloCoun;
-    init(p);
-    ret_thrd1 = pthread_create(&thread1, NULL, Deal, NULL);
-    ret_thrd2 = pthread_create(&thread2, NULL, Deal, NULL);
+    init(p,filename);
 
-    //judge if thread is successfully created
-    if(ret_thrd1!=0)
+    for(int i=0;i<n;i++)
     {
-	printf("线程1创建失败\n");
-    }
-    else
-    {
-	printf("线程1创建成功\n");
-    }
-    if(ret_thrd2!=0)
-    {
-	printf("线程2创建失败\n");
-    }
-    else
-    {
-	printf("线程2创建成功\n");
+	if(pthread_create(&thread[i], NULL, Deal, NULL)!=0)
+	{
+	    printf("线程%d创建失败\n",i);
+	}
     }
 
-    pJoin_thrd1=pthread_join(thread1, (void**)&retval1);
-    if (pJoin_thrd1 != 0) {
-        printf("cannot join with thread1\n");
+    for(int i=0;i<n;i++)
+    {
+	if(pthread_join(thread[i], (void**)&retval[i])!=0)
+	{
+	    printf("cannot join with thread%d\n",i);
+	}
     }
-    pJoin_thrd2=pthread_join(thread2, (void**)&retval2);
-    if (pJoin_thrd2 != 0) {
-        printf("cannot join with thread2\n");
-    }
+    endTime=clock();
     
-
-    printf("count is %d,2.Thrd1 %d,3.Thrd2 %d\n",p->value,retval1,retval2);
-
+    printf("count is %d\n",p->value);
+    for(int i=0;i<n;i++)
+    {
+	printf("Thread%d return : %d\n",i,retval[i]);
+    }
+    printf("Process time:%d\n",endTime-beginTime);
     return 0;
 }
