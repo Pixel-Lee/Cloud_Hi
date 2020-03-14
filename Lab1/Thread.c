@@ -45,9 +45,9 @@ void* Deal()
     {
 	printf("%s\n",puzzle);
     }
-    
+  
     usleep(rand()%100);
-    return (void*)i;
+    return (void*)(long)i;
 }
 
 int main()
@@ -65,6 +65,7 @@ int main()
     beginTime=clock();
     p=&gloCoun;
     init(p,filename);
+
 
     for(int i=0;i<n;i++)
     {
